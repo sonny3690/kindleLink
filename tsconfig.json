@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es6",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "strict": false,
+    "outDir": "dist"
+  }
+}
