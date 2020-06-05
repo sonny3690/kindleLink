@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node_modules/.bin/ts-node src/index.ts",
+    "show": "parcel index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "^14.0.11",
     "nodemon": "^2.0.4",
+    "parcel-bundler": "^1.12.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },
@@ -30,6 +32,8 @@
     "express": "^4.17.1",
     "nodemailer": "^6.4.8",
     "puppeteer": "^3.3.0",
-    "puppeteer-recorder": "^1.0.7"
+    "puppeteer-recorder": "^1.0.7",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   }
 }

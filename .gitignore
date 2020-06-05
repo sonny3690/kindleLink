@@ -2,3 +2,5 @@
 *.png
 /download/**
 .env**
+/dist
+/.cache
