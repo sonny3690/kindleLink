@@ -1,4 +1,5 @@
 import puppeteer, { Browser } from 'puppeteer'
+import express from 'express'
 
 let browser: Browser
 let page: puppeteer.Page
