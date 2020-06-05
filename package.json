@@ -27,6 +27,7 @@
     "@types/express": "^4.17.6",
     "@types/puppeteer": "^3.0.0",
     "express": "^4.17.1",
-    "puppeteer": "^3.3.0"
+    "puppeteer": "^3.3.0",
+    "puppeteer-recorder": "^1.0.7"
   }
 }
