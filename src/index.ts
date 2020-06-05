@@ -1,10 +1,22 @@
-import puppeteer, { Browser } from 'puppeteer'
+import puppeteer, { Browser, errors } from 'puppeteer'
 import express from 'express'
+import path from 'path'
+import bodyParser from 'body-parser'
+import cors from 'cors'
+import { sendAttachment, sendError } from './emailClient'
 
 let browser: Browser
 let page: puppeteer.Page
-const link: string = 'http://80.82.78.13/get.php?md5=92f44162cf334286dc07ce733d2237e9&key=7348HRDK0X6ABVWF&mirr=1'
+// const link: string = 'http://80.82.78.13/get.php?md5=92f44162cf334286dc07ce733d2237e9&key=7348HRDK0X6ABVWF&mirr=1'
 let tickClock: NodeJS.Timeout
+
+const app = express()
+const port = process.env.PORT || 3000
+app.use(express.static(path.join(__dirname, '../dist')));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors())
+
 
 async function beforeAll() {
   browser = await puppeteer.launch({ args: ['--incognito'] });
@@ -19,14 +31,14 @@ function scheduleSnapshots(interval = 2000) {
   let snapshotIndex = 0;
   tickClock = setInterval(function () {
 
-    const path = `snapshot${++snapshotIndex}-${interval / 1000 * snapshotIndex}s.png`
+    const path = `snapshots/snapshot${++snapshotIndex}-${interval / 1000 * snapshotIndex}s.png`
     console.log(path)
 
     page.screenshot({ path })
   }, interval);
 }
 
-async function doWork() {
+async function doWork(link) {
   await page.goto('https://ebook.online-convert.com/convert-to-mobi')
 
   const clickOnElement = (query: string) => page.$eval(query, (e) => (e as unknown as puppeteer.ElementHandle<Element>).click())
@@ -70,14 +82,53 @@ async function afterAll() {
 
 
 // thread that runs everything
-(async () => {
+
+async function run({ email, url }: { email: string, url: string }) {
   await beforeAll()
+  let hitError = false
+
   try {
-    await doWork()
+    await doWork(email)
   } catch (error) {
+    hitError = true;
     console.error(error)
   } finally {
     await afterAll()
 
+    if (hitError) {
+      await sendError(email)
+    } else {
+      await sendAttachment(email)
+    }
   }
-})()  
+}
+
+
+// finally some express
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../', 'dist', 'index.html'))
+})
+
+app.post('/', (req, res) => {
+
+  console.log('hit!')
+
+  console.log(req.body)
+
+  // const email = req.body.email
+  // const url = req.body.url
+  const [email, url] = [req.body.email, req.body.url]
+  console.log(email, url)
+
+  if (email == undefined || url == undefined) {
+    res.sendStatus(400)
+    return;
+  }
+
+  // console.log(email, url)
+  res.sendStatus(200)
+})
+
+app.listen(port, () => {
+  console.log(`server started at http://localhost:${port}`);
+});

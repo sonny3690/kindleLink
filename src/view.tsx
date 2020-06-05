@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom'
 import styled from 'styled-components'
+import ReactDOM from 'react-dom';
 
 const SexySubmitButton = styled.button`
   display: block;
@@ -81,6 +82,5 @@ const Stuff = () => {
 
 
 
-
-render(<Stuff />, document.getElementById('root'))
+ReactDOM.hydrate(<Stuff />, document.getElementById('root'))
 
