@@ -1,50 +1,51 @@
-import express from 'express'
-import puppeteer from 'puppeteer'
+import puppeteer, { Browser } from 'puppeteer'
 
-// const app = express()
-// const port = process.env.port || 3000
+let browser: Browser
+let page: puppeteer.Page
+let link: string = 'http://80.82.78.13/get.php?md5=d1b01bd1c1f8aa9f998b0e4d2e98bcf7&key=FPK0BE241MQ8XKME&mirr=1'
 
+async function beforeAll() {
+  browser = await puppeteer.launch({ args: ['--incognito'] });
+  const context = await browser.createIncognitoBrowserContext();
+  page = await context.newPage();
+  await page.setViewport({ width: 3000, height: 1000 });
+}
 
-// app.get('/', (req: express.Request, res: express.Response) => {
-//   console.log(req)
-//   res.send('render server side stuff?');
-// });
-
-
-// app.listen(port, () => {
-//   return console.log(`server is listening on ${port}`);
-// });
-
-const link = 'link that we are trying to put in ';
-
-(async (link) => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.setViewport({ width: 2000, height: 1000 });
-  await page.goto('https://ebook.online-convert.com/convert-to-mobi');
+async function doWork() {
+  await page.goto('https://ebook.online-convert.com/convert-to-mobi')
 
   const clickOnElement = (query: string) => page.$eval(query, (e) => (e as unknown as puppeteer.ElementHandle<Element>).click())
   const sleep = (dur: number) => new Promise(r => setTimeout(r, dur))
 
-  // // await page.$eval('a#externalUrlButton.uploadbutton', (e) => (e as unknown as puppeteer.ElementHandle<Element>).click());
-  await clickOnElement('a#externalUrlButton.uploadbutton')
-  await page.$eval('input#externalUrlInput', el => (el as HTMLInputElement).value = 'wefjiowjeofiwefweiofjowjeiofjwioefiwej');
-
-  await page.evaluate(_ => {
-    window.scrollBy(0, window.innerHeight);
-  });
-
+  await clickOnElement('a#externalUrlButton')
+  await clickOnElement('input#externalUrlInput')
+  await page.keyboard.type(link)
+  // await clickOnElement('footer#__BVID__17___BV_modal_footer_ > button.btn.btn-primary')
+  await clickOnElement('button#externalUrlDialogOkButton')
+  // await sleep(1000)
+  await page.waitForSelector('div.deletebutton', { timeout: 100000 })
   await page.screenshot({ path: 'start.png' });
-
-  await clickOnElement('button#externalUrlDialogOkButton.addUrlButton')
-  await sleep(400)
-
-  await clickOnElement('button#multifile-submit-button-main.multifile-submit-button')
-
-  await sleep(3000)
-
-  await page.screenshot({ path: 'end.png' });
+  // await (page as any)._client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: './' });
 
   await browser.close();
-})(link);
+}
 
+
+async function afterAll() {
+
+  await page.screenshot({ path: 'start.png' });
+  await browser.close();
+}
+
+
+(async () => {
+  await beforeAll()
+  try {
+    await doWork()
+  } catch (error) {
+    console.error(error)
+  } finally {
+    await afterAll()
+
+  }
+})()  
