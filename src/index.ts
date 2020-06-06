@@ -44,9 +44,7 @@ async function doWork(link: string) {
   await clickOnElement('input#externalUrlInput')
   await page.focus('input#externalUrlInput')
   await page.keyboard.type(link)
-  await page.screenshot({ path: 'snapshot1.png' });
   await clickOnElement('button#externalUrlDialogOkButton')
-  await page.screenshot({ path: 'start1.png' });
   // await sleep(1000)
 
   // here we are at the part where we add the URL to our file
