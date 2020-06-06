@@ -3,7 +3,7 @@ import express from 'express'
 import path from 'path'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { sendAttachment, sendError, emptyDirectory } from './emailClient'
+import { sendAttachment, sendError, emptyDirectory, deleteStaleDownloadFile } from './emailClient'
 
 let browser: Browser
 let page: puppeteer.Page
@@ -19,6 +19,7 @@ app.use(cors())
 
 async function beforeAll() {
   emptyDirectory('./snapshots')
+  deleteStaleDownloadFile()
   browser = await puppeteer.launch({ args: ['--incognito'] });
   const context = await browser.createIncognitoBrowserContext();
   page = await context.newPage();
@@ -52,7 +53,7 @@ async function doWork(link) {
   // await sleep(1000)
 
   // here we are at the part where we add the URL to our file
-  await page.waitForSelector('div.deletebutton', { timeout: 20000 })
+  await page.waitForSelector('div.deletebutton', { timeout: 2000000 })
   await clickOnElement('button#multifile-submit-button-main')
 
   // wait for our download page to show up
@@ -95,9 +96,9 @@ async function run({ email, url }: { email: string, url: string }) {
     await afterAll()
 
     if (hitError) {
-      await sendError(email)
+      sendError(email)
     } else {
-      await sendAttachment(email)
+      sendAttachment(email)
     }
   }
 }
@@ -109,6 +110,7 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', (req, res) => {
+  console.log(req)
 
   const [email, url] = [req.body.email, req.body.url]
 

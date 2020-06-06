@@ -32,7 +32,12 @@ const send = (email: string, attachments: { filename: string, path: string }[]) 
     } else {
       console.log('Email sent! ' + JSON.stringify(info, null, '\t'))
     }
-  }))
+  })).then(r => console.log('Done sending')).catch(e => {
+
+    console.error(e)
+    sendError(email)
+
+  })
 }
 
 export const sendError = (email: string) => {
@@ -55,20 +60,32 @@ export const sendError = (email: string) => {
 
 
 
-const getMostRecentFile = (dir: string) => {
+const getMostRecentFile = (dir: string, latest = false) => {
   const files = fs.readdirSync(dir).filter(f => fs.lstatSync(path.join(dir, f)).isFile()).map(
     file => ({ file, mtime: fs.lstatSync(path.join(dir, file)).mtime })).sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
 
-  if (files.length === 0) {
+  if (files.length === 0 && !latest) {
     throw Error('We couldnt download the file')
   }
   // keep in case of future support of multiple files
-  return [files[0]]
+  return [files[latest ? files.length - 1 : 0]]
 };
+
+export const deleteStaleDownloadFile = () => {
+  const recent = getMostRecentFile(downloadDir, true);
+
+  try {
+    fs.unlinkSync(path.join(downloadDir, recent[0].file))
+  } catch (e) {
+    console.error(e)
+  }
+
+}
 
 
 export const sendAttachment = (email: string) => {
   const recentFile = getMostRecentFile(downloadDir)
+  console.log('Sending ' + JSON.stringify(recentFile[0]))
 
   // map for future multiattachment support
   const attachments = recentFile.map(
@@ -90,3 +107,4 @@ export const emptyDirectory = (dir: string) => {
     }
   });
 }
+
