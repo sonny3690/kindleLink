@@ -17,7 +17,7 @@ let browser: Browser, page: puppeteer.Page, tickClock: NodeJS.Timeout;
 async function beforeAll() {
   emptyDirectory('./snapshots')
   deleteStaleDownloadFile()
-  browser = await puppeteer.launch({ args: ['--incognito'] });
+  browser = await puppeteer.launch({ args: ['--incognito', '--no-sandbox'] });
   const context = await browser.createIncognitoBrowserContext();
   page = await context.newPage();
   await page.setViewport({ width: 3000, height: 1000 });
