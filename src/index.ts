@@ -1,13 +1,9 @@
-import puppeteer, { Browser, errors } from 'puppeteer'
+import puppeteer, { Browser, errors, BrowserEventObj } from 'puppeteer'
 import express from 'express'
 import path from 'path'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { sendAttachment, sendError, emptyDirectory, deleteStaleDownloadFile } from './emailClient'
-
-let browser: Browser
-let page: puppeteer.Page
-let tickClock: NodeJS.Timeout
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -16,6 +12,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors())
 
+let browser: Browser, page: puppeteer.Page, tickClock: NodeJS.Timeout;
 
 async function beforeAll() {
   emptyDirectory('./snapshots')
@@ -39,7 +36,7 @@ function scheduleSnapshots(interval = 2000) {
   }, interval);
 }
 
-async function doWork(link) {
+async function doWork(link: string) {
   await page.goto('https://ebook.online-convert.com/convert-to-mobi')
 
   const clickOnElement = (query: string) => page.$eval(query, (e) => (e as unknown as puppeteer.ElementHandle<Element>).click())
@@ -68,7 +65,7 @@ async function doWork(link) {
 
 }
 
-async function wasBrowserKilled(browser) {
+async function wasBrowserKilled() {
   const procInfo = await browser.process();
   return !!procInfo.signalCode;
 }
@@ -77,10 +74,8 @@ async function afterAll() {
   clearInterval(tickClock)
   await page.screenshot({ path: 'end.png' });
   await browser.close()
-  console.log(`Closed session safely: browser killed status: ${await wasBrowserKilled(browser)}`)
+  console.log(`Closed session safely: browser killed status: ${await wasBrowserKilled()}`)
 }
-
-
 
 // thread that runs everything
 async function run({ email, url }: { email: string, url: string }) {
@@ -96,8 +91,10 @@ async function run({ email, url }: { email: string, url: string }) {
     await afterAll()
 
     if (hitError) {
+      console.log('hit an error')
       sendError(email)
     } else {
+      console.log('sending email to ' + email)
       sendAttachment(email)
     }
   }
@@ -110,7 +107,7 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', (req, res) => {
-  console.log(req)
+  console.log(req.body)
 
   const [email, url] = [req.body.email, req.body.url]
 
