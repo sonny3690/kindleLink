@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { render } from 'react-dom'
 import styled from 'styled-components'
 import ReactDOM from 'react-dom';
 
 const SexySubmitButton = styled.button`
   display: block;
-  margin 30px auto;
+  margin: 30px auto;
   font-size: 20px;
   border-radius: 5px; 
   background: white;
@@ -19,7 +18,7 @@ const Input = styled.input`
  width: 80%;
  font-size: 20px;
  border-radius: 15px;
- padding: 5px;
+ padding: 10px 15px;
  outline: none;
  textIndent: 30px;
 
@@ -48,13 +47,23 @@ const Stuff = () => {
   const [values, setValues] = useState({ email: '', url: '' })
 
   const changeValue = (key: string) => (event) => setValues(Object.assign(values, { [key]: event.target.value }))
-  const submit = () => {
+  const submit = async () => {
     if (validInput(values.email, values.url)) {
+      const req = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values)
+      }
 
-      // send some arbitrary request
-      alert(`Your book will be successfully sent to ${values.email}`)
-
-      window.location.reload();
+      try {
+        await fetch('/', req)
+        alert(`Your book will be successfully sent to ${values.email}`)
+      } catch (err) {
+        console.error(err)
+        alert('Sorry, theres an issue with the server!')
+      } finally {
+        window.location.reload();
+      }
     } else {
       alert('Your inputs dont make sense')
     }

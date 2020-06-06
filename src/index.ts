@@ -3,7 +3,7 @@ import express from 'express'
 import path from 'path'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { sendAttachment, sendError } from './emailClient'
+import { sendAttachment, sendError, emptyDirectory } from './emailClient'
 
 let browser: Browser
 let page: puppeteer.Page
@@ -19,6 +19,7 @@ app.use(cors())
 
 
 async function beforeAll() {
+  emptyDirectory('./snapshots')
   browser = await puppeteer.launch({ args: ['--incognito'] });
   const context = await browser.createIncognitoBrowserContext();
   page = await context.newPage();
@@ -59,9 +60,9 @@ async function doWork(link) {
   await page.waitForSelector('div#fallback-link', { timeout: 20000 })
   const client = await page.target().createCDPSession();
 
-  await page.waitForSelector('button.zip-download.zip-download-single.zip-download-grey', { timeout: 100000 })
+  await page.waitForSelector('button.zip-download.zip-download-single.zip-download-grey', { timeout: 1000000 })
   await client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: './download' })
-  await page.waitFor(6000)
+  await page.waitFor(50000)
 
   console.log('success!')
 
@@ -88,7 +89,7 @@ async function run({ email, url }: { email: string, url: string }) {
   let hitError = false
 
   try {
-    await doWork(email)
+    await doWork(url)
   } catch (error) {
     hitError = true;
     console.error(error)
@@ -111,21 +112,14 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
 
-  console.log('hit!')
-
-  console.log(req.body)
-
-  // const email = req.body.email
-  // const url = req.body.url
   const [email, url] = [req.body.email, req.body.url]
-  console.log(email, url)
 
   if (email == undefined || url == undefined) {
     res.sendStatus(400)
     return;
   }
 
-  // console.log(email, url)
+  run({ email, url })
   res.sendStatus(200)
 })
 
