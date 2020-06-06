@@ -47,7 +47,7 @@ const Stuff = () => {
   const [values, setValues] = useState({ email: '', url: '' })
 
   const changeValue = (key: string) => (event) => setValues(Object.assign(values, { [key]: event.target.value }))
-  const submit = async () => {
+  const submit = () => {
     if (validInput(values.email, values.url)) {
       const req = {
         method: 'POST',
@@ -55,15 +55,17 @@ const Stuff = () => {
         body: JSON.stringify(values)
       }
 
-      try {
-        await fetch('/', req)
-        alert(`Your book will be successfully sent to ${values.email}`)
-      } catch (err) {
-        console.error(err)
-        alert('Sorry, theres an issue with the server!')
-      } finally {
-        window.location.reload();
-      }
+
+      fetch('/', req)
+        .then(r => {
+          alert(`Your book will be successfully sent to ${values.email}`)
+          window.location.reload()
+        })
+        .catch(r => {
+          console.error(r)
+          alert('Sorry, theres an issue with the server!')
+          window.location.reload();
+        })
     } else {
       alert('Your inputs dont make sense')
     }
@@ -79,7 +81,7 @@ const Stuff = () => {
       <div style={{ height: '10vh' }} />
       <h4>Copy Paste a Link and An Email And Your Book Will Be Sent!</h4>
       <Form>
-        <Input onChange={changeValue('url')} placeholder='Book URL' on />
+        <Input onChange={changeValue('url')} placeholder='Book URL (.awk, .epub, .pdf, anything really)' />
         <Input onChange={changeValue('email')} placeholder='Your Email Here' />
         <SexySubmitButton onClick={submit}>Send me that shit</SexySubmitButton>
       </Form>

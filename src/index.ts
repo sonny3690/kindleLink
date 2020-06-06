@@ -7,7 +7,6 @@ import { sendAttachment, sendError, emptyDirectory } from './emailClient'
 
 let browser: Browser
 let page: puppeteer.Page
-// const link: string = 'http://80.82.78.13/get.php?md5=92f44162cf334286dc07ce733d2237e9&key=7348HRDK0X6ABVWF&mirr=1'
 let tickClock: NodeJS.Timeout
 
 const app = express()
@@ -83,7 +82,6 @@ async function afterAll() {
 
 
 // thread that runs everything
-
 async function run({ email, url }: { email: string, url: string }) {
   await beforeAll()
   let hitError = false
