@@ -5,4 +5,4 @@
 - [x] Link email client with recipient
 - [x] Dockerize
 - [x] Deploy
-- [ ] Handle concurrent workloads
+- [x] Handle concurrent workloads

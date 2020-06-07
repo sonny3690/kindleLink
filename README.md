@@ -26,7 +26,6 @@ This email can be your kindle email address, but be sure to add `kindle.email.se
 
 ## Other Things
 - No user information is stored. There's no database or storage involved. The only things that are kept are download files (eviction through LRU cache), screenshots of the most recent Puppeteer session (deleted after each session though). 
-- It seems like the deploy can't really handle multiple loads at once. This comes down to the fact that Node.js is single-threaded, and due to organizations around puppeteer & the time length of the workload, it's quite difficult to deal with issues of concurrency. A future update may support multiple workloads through spawning new processes.
 - Vercel should support Docker Containers
 - I don't advocate any illegal uses of the product
 
