@@ -24,6 +24,31 @@ Just enter the URL of your desired file format (.epub, .pdf, .doc, .docx, .txt, 
 
 This email can be your kindle email address, but be sure to add `kindle.email.service@gmail.com` to your approved e-mail address list. More on that [here](https://www.amazon.com/gp/help/customer/display.html?nodeId=GX9XLEVV8G4DB28H). This is irrelevant if your email does not directly connect to your Kindle (or doesn't end in `xxxx@kindle.com`)
 
+## Technical Stuff
+
+This app is built on Node.js on Express using Typescript. The website is built in React but that was overkill when a simple html file would've done the trick. You can also directly interact with the server using the `POST /` endpoint using the specified params.
+
+```json
+{
+  "email": string,
+  "url": string
+}
+```
+
+You can run the following commands to get started.
+
+```sh
+npm i && npm start
+```
+
+This will start a server at your specified port. Also, be sure to create your `.env` file containing your email credentials.
+
+Alternatively, if you use docker, you can just build your image from the root dir using
+
+```sh
+docker build -t <your image name> .
+```
+
 ## Other Things
 - No user information is stored. There's no database or storage involved. The only things that are kept are download files (eviction through LRU cache), screenshots of the most recent Puppeteer session (deleted after each session though). 
 - Vercel should support Docker Containers
