@@ -1,8 +1,9 @@
-import puppeteer, { Browser, errors, BrowserEventObj } from 'puppeteer'
+import puppeteer, { Browser } from 'puppeteer'
 import express from 'express'
 import path from 'path'
 import bodyParser from 'body-parser'
 import cors from 'cors'
+import { params } from './models'
 import { sendAttachment, sendError, emptyDirectory, deleteStaleDownloadFile } from './emailClient'
 
 const app = express()
@@ -12,88 +13,93 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors())
 
-let browser: Browser, page: puppeteer.Page, tickClock: NodeJS.Timeout;
-
-async function beforeAll() {
+async function beforeAll(params) {
   emptyDirectory('./snapshots')
   deleteStaleDownloadFile()
-  browser = await puppeteer.launch({ args: ['--incognito', '--no-sandbox'] });
-  const context = await browser.createIncognitoBrowserContext();
-  page = await context.newPage();
-  await page.setViewport({ width: 3000, height: 1000 });
-  scheduleSnapshots()
+  params.browser = await puppeteer.launch({ args: ['--incognito', '--no-sandbox'] });
+  const context = await params.browser.createIncognitoBrowserContext();
+  params.page = await context.newPage();
+  await params.page.setViewport({ width: 3000, height: 1000 });
+  scheduleSnapshots(params)
 }
 
 // take snapshots at regular intervals
-function scheduleSnapshots(interval = 2000) {
+function scheduleSnapshots(params, interval = 5000) {
   let snapshotIndex = 0;
-  tickClock = setInterval(function () {
+  params.tickClock = setInterval(function () {
 
     const path = `snapshots/snapshot${++snapshotIndex}-${interval / 1000 * snapshotIndex}s.png`
     console.log(path)
 
-    page.screenshot({ path })
+    params.page.screenshot({ path })
   }, interval);
 }
 
-async function doWork(link: string) {
-  await page.goto('https://ebook.online-convert.com/convert-to-mobi')
+async function doWork(params: params) {
+  await params.page.goto('https://ebook.online-convert.com/convert-to-mobi')
 
-  const clickOnElement = (query: string) => page.$eval(query, (e) => (e as unknown as puppeteer.ElementHandle<Element>).click())
+  const clickOnElement = (query: string) => params.page.$eval(query, (e) => (e as unknown as puppeteer.ElementHandle<Element>).click())
   await clickOnElement('a#externalUrlButton')
   await clickOnElement('input#externalUrlInput')
-  await page.focus('input#externalUrlInput')
-  await page.keyboard.type(link)
+  await params.page.focus('input#externalUrlInput')
+  await params.page.keyboard.type(params.url)
   await clickOnElement('button#externalUrlDialogOkButton')
   // await sleep(1000)
 
   // here we are at the part where we add the URL to our file
-  await page.waitForSelector('div.deletebutton', { timeout: 2000000 })
+  await params.page.waitForSelector('div.deletebutton', { timeout: 2000000 })
   await clickOnElement('button#multifile-submit-button-main')
 
   // wait for our download page to show up
-  await page.waitForSelector('div#fallback-link', { timeout: 20000 })
-  const client = await page.target().createCDPSession();
+  await params.page.waitForSelector('div#fallback-link', { timeout: 20000 })
+  const client = await params.page.target().createCDPSession();
 
-  await page.waitForSelector('button.zip-download.zip-download-single.zip-download-grey', { timeout: 1000000 })
+  await params.page.waitForSelector('button.zip-download.zip-download-single.zip-download-grey', { timeout: 1000000 })
+
+  const fileElement = await params.page.$("span.download-span > a");
+  const fileName = await (await fileElement.getProperty('textContent')).jsonValue();
+
   await client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: './download' })
-  await page.waitFor(50000)
+  await params.page.waitFor(50000)
 
   console.log('success!')
 
+  return fileName
 }
 
-async function wasBrowserKilled() {
-  const procInfo = await browser.process();
+async function wasBrowserKilled(params: params) {
+  const procInfo = await params.browser.process();
   return !!procInfo.signalCode;
 }
 
-async function afterAll() {
-  clearInterval(tickClock)
-  await page.screenshot({ path: 'end.png' });
-  await browser.close()
-  console.log(`Closed session safely: browser killed status: ${await wasBrowserKilled()}`)
+async function afterAll(params) {
+  await clearInterval(params.tickClock)
+  await params.browser.close()
+  console.log(`Closed session safely: params.browser killed status: ${await wasBrowserKilled(params)}`)
 }
 
 // thread that runs everything
-async function run({ email, url }: { email: string, url: string }) {
-  await beforeAll()
+async function run(params: params) {
+  await beforeAll(params)
+  let fileName = undefined
+
+  console.log(params)
   let hitError = false
 
   try {
-    await doWork(url)
+    fileName = await doWork(params)
   } catch (error) {
     hitError = true;
     console.error(error)
   } finally {
-    await afterAll()
+    await afterAll(params)
 
-    if (hitError) {
+    if (hitError || fileName == undefined) {
       console.log('hit an error')
-      sendError(email)
+      sendError(params.email)
     } else {
-      console.log('sending email to ' + email)
-      sendAttachment(email)
+      console.log('sending email to ' + params.email)
+      sendAttachment(params.email, fileName)
     }
   }
 }
@@ -107,14 +113,22 @@ app.get('/', (req, res) => {
 app.post('/', (req, res) => {
   console.log(req.body)
 
-  const [email, url] = [req.body.email, req.body.url]
+  const [email, url] = [req.body.email, req.body.url] as string[]
 
-  if (email == undefined || url == undefined) {
+  if (email == 'undefined' || url == 'undefined') {
     res.sendStatus(400)
     return;
   }
 
-  run({ email, url })
+  const params: params = {
+    email,
+    url,
+    browser: undefined,
+    page: undefined,
+    tickClock: undefined
+  }
+
+  run(params)
   res.sendStatus(200)
 })
 

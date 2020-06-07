@@ -8,16 +8,15 @@ const downloadDir = './download'
 
 dotenv.config()
 
-const transporter = mailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: sender,
-    pass: process.env.EMAIL_PW
-  }
-})
-
-
 const send = (email: string, attachments: { filename: string, path: string }[]) => {
+
+  const transporter = mailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: sender,
+      pass: process.env.EMAIL_PW
+    }
+  })
 
   const mailOptions = {
     from: sender,
@@ -42,6 +41,13 @@ const send = (email: string, attachments: { filename: string, path: string }[]) 
 
 export const sendError = (email: string) => {
 
+  const transporter = mailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: sender,
+      pass: process.env.EMAIL_PW
+    }
+  })
   const mailOptions = {
     from: sender,
     to: email,
@@ -58,43 +64,61 @@ export const sendError = (email: string) => {
   }))
 }
 
-
-
 const getMostRecentFile = (dir: string, latest = false) => {
   const files = fs.readdirSync(dir).filter(f => fs.lstatSync(path.join(dir, f)).isFile()).map(
-    file => ({ file, mtime: fs.lstatSync(path.join(dir, file)).mtime })).sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+    file => ({ file, mtime: fs.lstatSync(path.join(dir, file)).mtime })).sort((a, b) => b.mtime.getTime() - a.mtime.getTime()).map(f => f.file)
+
 
   if (files.length === 0 && !latest) {
     throw Error('We couldnt download the file')
   }
   // keep in case of future support of multiple files
-  return [files[latest ? files.length - 1 : 0]]
+  // return [[files[latest ? files.length - 1 : 0], files.length]
+  return files || []
 };
 
 export const deleteStaleDownloadFile = () => {
-  const recent = getMostRecentFile(downloadDir, true);
+  const files = getMostRecentFile(downloadDir, true);
+
+  if (files.length === 0) {
+    return
+  }
 
   try {
-    fs.unlinkSync(path.join(downloadDir, recent[0].file))
+    fs.unlinkSync(path.join(downloadDir, files[files.length - 1]))
   } catch (e) {
     console.error(e)
   }
+}
 
+export const matchingFile = (dir: string, fileName: string) => {
+  const file = fs.readdirSync(dir).filter(f => f === fileName)
+
+  if (file.length === 0) {
+    console.error('No matching file!!!')
+    return []
+  }
+
+  return [file[0]]
 }
 
 
-export const sendAttachment = (email: string) => {
-  const recentFile = getMostRecentFile(downloadDir)
-  console.log('Sending ' + JSON.stringify(recentFile[0]))
+export const sendAttachment = (email: string, fileName: string) => {
+  const recentFiles = matchingFile(downloadDir, fileName)
+  console.log('Sending ' + JSON.stringify(recentFiles[0]))
 
+  if (recentFiles.length === 0) {
+    sendError(email)
+    return
+  }
   // map for future multiattachment support
-  const attachments = recentFile.map(
-    book => ({ filename: book.file, path: `${downloadDir}/${book.file}` })
+  const attachments = [recentFiles[0]].map(
+    book => ({ filename: book, path: `${downloadDir}/${book}` })
   )
 
   send(email, attachments)
-
 }
+
 
 export const emptyDirectory = (dir: string) => {
   fs.readdir(dir, (err, files) => {
