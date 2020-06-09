@@ -1,7 +1,7 @@
 import mailer from 'nodemailer'
-import fs from 'fs'
-import dotenv from 'dotenv'
-import path from 'path'
+import * as fs from 'fs'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
 
 const sender = 'kindle.email.service@gmail.com'
 const downloadDir = './download'

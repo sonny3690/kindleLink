@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from 'puppeteer'
+import puppeteer from 'puppeteer'
 import express from 'express'
 import path from 'path'
 import bodyParser from 'body-parser'

@@ -6,7 +6,9 @@
   "scripts": {
     "start": "echo \"starting server...\" && ./node_modules/.bin/ts-node src/index.ts",
     "show": "parcel index.html",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "heroku-start": "node build/index.js",
+    "postinstall": "rm -rf build/ && tsc --esModuleInterop --outdir build/ src/*.ts"
   },
   "repository": {
     "type": "git",
