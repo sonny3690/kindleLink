@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "heroku-start": "node build/index.js",
     "write-js": "rm -rf build/ && tsc --esModuleInterop --outdir build/ src/*.ts",
-    "postinstall": "npm run write-js && parcel build index.html"
+    "postinstall": "npm run write-js && parcel build index.html && mkdir download && mkdir snapshots"
   },
   "repository": {
     "type": "git",
