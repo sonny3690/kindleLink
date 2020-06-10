@@ -1,7 +1,7 @@
 # Kindle Book Sender
 ---
 
-Find a deployed version [here](https://linkkindle.herokuapp.com/). 
+Find a deployed version [here](kindlelink.xyz). 
 
 This website just lets you specify a file URL (ie. google.com/corona.pdf) emails you a mobi version of it. Most file formats (.epub, .pdf, .doc, .docx, .txt, and others) are supported.
 
@@ -51,6 +51,6 @@ docker build -t <your image name> .
 
 ## Other Things
 - No user information is stored. There's no database or storage involved. The only things that are kept are download files (eviction through LRU cache), screenshots of the most recent Puppeteer session (deleted after each session though). 
-- Vercel should support Docker Containers
+- Concurrent heavy load requests finally supported.
 - I don't advocate any illegal uses of the product
 
