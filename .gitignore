@@ -6,3 +6,4 @@
 /.cache
 .vercel
 /build
+**.pem
