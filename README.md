@@ -1,7 +1,7 @@
 # Kindle Book Sender
 ---
 
-Find a deployed version [here](kindlelink.xyz). 
+Find a deployed version [here](http://kindlelink.xyz). 
 
 This website just lets you specify a file URL (ie. google.com/corona.pdf) emails you a mobi version of it. Most file formats (.epub, .pdf, .doc, .docx, .txt, and others) are supported.
 
