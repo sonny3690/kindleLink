@@ -122,11 +122,11 @@ const Stuff = () => {
         <Form>
           <Input
             onChange={changeValue("url")}
-            placeholder="Download URL for File"
+            placeholder="Download URL (PDF, EPUB, TXT, DOC, HTML)"
           />
           <Input
             onChange={changeValue("email")}
-            placeholder="Email receiving converted mobi file"
+            placeholder="Email Receiving MOBI"
           />
           <SexySubmitButton onClick={submit}>
             Send Me That Shit
